@@ -26,7 +26,10 @@ const ProfileFormPage = () => {
     emergencyContact: "",
     emergencyPhone: "",
     aadharNumber: "",
+    aadharCardUrl: "",
   });
+  const [aadharFile, setAadharFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -63,6 +66,7 @@ const ProfileFormPage = () => {
         emergencyContact: profile.emergency_contact,
         emergencyPhone: profile.emergency_phone,
         aadharNumber: profile.aadhar_number,
+        aadharCardUrl: profile.aadhar_card_url || "",
       });
     }
   };
@@ -72,6 +76,28 @@ const ProfileFormPage = () => {
     setLoading(true);
 
     try {
+      let aadharCardUrl = formData.aadharCardUrl;
+
+      // Upload Aadhar card if a new file is selected
+      if (aadharFile) {
+        setUploading(true);
+        const fileExt = aadharFile.name.split('.').pop();
+        const fileName = `${user.id}/aadhar-card.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('aadhar-cards')
+          .upload(fileName, aadharFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('aadhar-cards')
+          .getPublicUrl(fileName);
+
+        aadharCardUrl = publicUrl;
+        setUploading(false);
+      }
+
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         full_name: formData.fullName,
@@ -85,6 +111,7 @@ const ProfileFormPage = () => {
         emergency_contact: formData.emergencyContact,
         emergency_phone: formData.emergencyPhone,
         aadhar_number: formData.aadharNumber,
+        aadhar_card_url: aadharCardUrl,
       });
 
       if (error) throw error;
@@ -103,6 +130,7 @@ const ProfileFormPage = () => {
       });
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -243,12 +271,28 @@ const ProfileFormPage = () => {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="aadharCard">Upload Aadhar Card *</Label>
+              <Input
+                id="aadharCard"
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
+                required={!formData.aadharCardUrl}
+              />
+              {formData.aadharCardUrl && (
+                <p className="text-xs text-muted-foreground">
+                  Already uploaded. Select a new file to replace.
+                </p>
+              )}
+            </div>
+
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-primary to-secondary"
-              disabled={loading}
+              disabled={loading || uploading}
             >
-              {loading ? "Saving..." : "Save Profile"}
+              {uploading ? "Uploading..." : loading ? "Saving..." : "Save Profile"}
             </Button>
           </form>
         </Card>

@@ -52,6 +52,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aadhar_card_url: string | null
           aadhar_number: string
           address: string
           city: string
@@ -68,6 +69,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          aadhar_card_url?: string | null
           aadhar_number?: string
           address: string
           city: string
@@ -84,6 +86,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          aadhar_card_url?: string | null
           aadhar_number?: string
           address?: string
           city?: string
