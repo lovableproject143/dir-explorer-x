@@ -6,32 +6,12 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Check } from "lucide-react";
 
-const membershipPlans = [
-  {
-    type: "basic",
-    name: "Basic Membership",
-    amount: 500,
-    features: ["Temple entry", "Event notifications", "Monthly newsletter"],
-  },
-  {
-    type: "silver",
-    name: "Silver Membership",
-    amount: 1500,
-    features: ["All Basic features", "Priority seating", "Special event invites", "Discounts on prasad"],
-  },
-  {
-    type: "gold",
-    name: "Gold Membership",
-    amount: 3000,
-    features: ["All Silver features", "VIP darshan", "Personal blessings", "Free accommodation"],
-  },
-  {
-    type: "platinum",
-    name: "Platinum Membership",
-    amount: 5000,
-    features: ["All Gold features", "Annual puja", "Lifetime recognition", "Personal prayer service"],
-  },
-];
+const membershipPlan = {
+  type: "basic",
+  name: "Temple Membership",
+  amount: 1000,
+  features: ["Temple entry", "Event notifications", "Priority darshan", "Monthly newsletter", "Special event invites"],
+};
 
 const MembershipPage = () => {
   const navigate = useNavigate();
@@ -74,8 +54,8 @@ const MembershipPage = () => {
     setLoading(false);
   };
 
-  const handleSelectPlan = (plan: typeof membershipPlans[0]) => {
-    sessionStorage.setItem("selectedMembership", JSON.stringify(plan));
+  const handleSelectPlan = () => {
+    sessionStorage.setItem("selectedMembership", JSON.stringify(membershipPlan));
     navigate("/payment");
   };
 
@@ -101,44 +81,39 @@ const MembershipPage = () => {
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-            Choose Your Membership
+            Temple Membership
           </h1>
           <p className="text-muted-foreground">
-            Select the plan that best suits your spiritual journey
+            Join our temple community
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {membershipPlans.map((plan) => (
-            <Card
-              key={plan.type}
-              className="p-6 hover:shadow-xl transition-all border-2 hover:border-primary/50"
-            >
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                <div className="text-3xl font-bold text-primary mb-1">
-                  ₹{plan.amount}
-                </div>
-                <p className="text-sm text-muted-foreground">per year</p>
+        <div className="max-w-md mx-auto">
+          <Card className="p-6 hover:shadow-xl transition-all border-2 hover:border-primary/50">
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold mb-2">{membershipPlan.name}</h3>
+              <div className="text-3xl font-bold text-primary mb-1">
+                ₹{membershipPlan.amount}
               </div>
+              <p className="text-sm text-muted-foreground">per year</p>
+            </div>
 
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+            <ul className="space-y-3 mb-6">
+              {membershipPlan.features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">{feature}</span>
+                </li>
+              ))}
+            </ul>
 
-              <Button
-                onClick={() => handleSelectPlan(plan)}
-                className="w-full bg-gradient-to-r from-primary to-secondary"
-              >
-                Select Plan
-              </Button>
-            </Card>
-          ))}
+            <Button
+              onClick={handleSelectPlan}
+              className="w-full bg-gradient-to-r from-primary to-secondary"
+            >
+              Select Plan
+            </Button>
+          </Card>
         </div>
       </div>
     </div>

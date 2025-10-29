@@ -25,6 +25,7 @@ const ProfileFormPage = () => {
     pincode: "",
     emergencyContact: "",
     emergencyPhone: "",
+    aadharNumber: "",
   });
 
   useEffect(() => {
@@ -61,6 +62,7 @@ const ProfileFormPage = () => {
         pincode: profile.pincode,
         emergencyContact: profile.emergency_contact,
         emergencyPhone: profile.emergency_phone,
+        aadharNumber: profile.aadhar_number,
       });
     }
   };
@@ -82,6 +84,7 @@ const ProfileFormPage = () => {
         pincode: formData.pincode,
         emergency_contact: formData.emergencyContact,
         emergency_phone: formData.emergencyPhone,
+        aadhar_number: formData.aadharNumber,
       });
 
       if (error) throw error;
@@ -223,6 +226,19 @@ const ProfileFormPage = () => {
                 type="tel"
                 value={formData.emergencyPhone}
                 onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="aadharNumber">Aadhar Number *</Label>
+              <Input
+                id="aadharNumber"
+                type="text"
+                value={formData.aadharNumber}
+                onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
+                placeholder="Enter 12-digit Aadhar number"
+                maxLength={12}
                 required
               />
             </div>

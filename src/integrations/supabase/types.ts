@@ -52,6 +52,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aadhar_number: string
           address: string
           city: string
           created_at: string | null
@@ -67,6 +68,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          aadhar_number?: string
           address: string
           city: string
           created_at?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          aadhar_number?: string
           address?: string
           city?: string
           created_at?: string | null
