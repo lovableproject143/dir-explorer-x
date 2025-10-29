@@ -7,6 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { z } from "zod";
+
+const profileSchema = z.object({
+  fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  email: z.string().email("Invalid email address").max(255, "Email too long"),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Invalid phone number. Must be a valid Indian mobile number (10 digits starting with 6-9)"),
+  aadharNumber: z.string().regex(/^\d{12}$/, "Aadhar number must be exactly 12 digits"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  address: z.string().trim().min(5, "Address must be at least 5 characters").max(200, "Address must be less than 200 characters"),
+  city: z.string().trim().min(2, "City must be at least 2 characters").max(100, "City too long"),
+  state: z.string().trim().min(2, "State must be at least 2 characters").max(100, "State too long"),
+  pincode: z.string().regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+  emergencyContact: z.string().trim().min(2, "Contact name must be at least 2 characters").max(100, "Contact name too long"),
+  emergencyPhone: z.string().regex(/^[6-9]\d{9}$/, "Invalid emergency phone number"),
+});
 
 const ProfileFormPage = () => {
   const navigate = useNavigate();
@@ -76,10 +91,47 @@ const ProfileFormPage = () => {
     setLoading(true);
 
     try {
+      // Validate form data
+      const validationResult = profileSchema.safeParse(formData);
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       let aadharCardUrl = formData.aadharCardUrl;
 
       // Upload Aadhar card if a new file is selected
       if (aadharFile) {
+        // Validate file type and size
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (!allowedTypes.includes(aadharFile.type)) {
+          toast({
+            title: "Invalid file type",
+            description: "Please upload only JPG, PNG, or PDF files",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        if (aadharFile.size > maxSize) {
+          toast({
+            title: "File too large",
+            description: "File size must be less than 5MB",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         setUploading(true);
         const fileExt = aadharFile.name.split('.').pop();
         const fileName = `${user.id}/aadhar-card.${fileExt}`;

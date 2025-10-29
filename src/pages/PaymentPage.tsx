@@ -8,6 +8,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { z } from "zod";
+
+const paymentSchema = z.object({
+  payment_reference: z.string()
+    .trim()
+    .min(6, "Transaction ID must be at least 6 characters")
+    .max(50, "Transaction ID must be less than 50 characters")
+    .regex(/^[A-Z0-9]+$/i, "Transaction ID can only contain letters and numbers"),
+});
 
 const PaymentPage = () => {
   const navigate = useNavigate();
@@ -50,11 +59,44 @@ const PaymentPage = () => {
     setLoading(true);
 
     try {
+      // Validate payment reference
+      const validationResult = paymentSchema.safeParse({
+        payment_reference: paymentReference,
+      });
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check for duplicate transaction ID
+      const { data: existingApplications } = await supabase
+        .from("membership_applications")
+        .select("id")
+        .eq("payment_reference", paymentReference.trim())
+        .maybeSingle();
+
+      if (existingApplications) {
+        toast({
+          title: "Duplicate Transaction ID",
+          description: "This transaction ID has already been used. Please verify your payment details.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.from("membership_applications").insert({
         user_id: user.id,
         membership_type: selectedPlan.type,
         amount: selectedPlan.amount,
-        payment_reference: paymentReference,
+        payment_reference: paymentReference.trim(),
         status: "pending",
       });
 
