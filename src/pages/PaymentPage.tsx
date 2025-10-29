@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, QrCode } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const PaymentPage = () => {
   const navigate = useNavigate();
@@ -117,7 +118,13 @@ const PaymentPage = () => {
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div className="text-center p-6 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
-              <QrCode className="w-24 h-24 mx-auto mb-4 text-primary" />
+              <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                <QRCodeSVG 
+                  value={`upi://pay?pa=temple@upi&pn=Temple&am=${selectedPlan.amount}&cu=INR&tn=Membership Payment`}
+                  size={160}
+                  level="H"
+                />
+              </div>
               <h3 className="font-bold mb-2">Scan QR Code</h3>
               <p className="text-sm text-muted-foreground mb-2">
                 Use any UPI app to scan and pay
