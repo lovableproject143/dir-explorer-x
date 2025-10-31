@@ -14,6 +14,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -24,6 +29,8 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address").max(255, "Email too long"),
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format (use international format with +)"),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .max(72, "Password must be less than 72 characters")
@@ -38,10 +45,14 @@ const registerSchema = z.object({
 
 const AuthPage = () => {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -98,6 +109,7 @@ const AuthPage = () => {
       // Validate registration data
       const validationResult = registerSchema.safeParse({ 
         email, 
+        phone,
         password, 
         confirmPassword 
       });
@@ -115,6 +127,7 @@ const AuthPage = () => {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
+        phone: phone.trim(),
         options: {
           emailRedirectTo: `${window.location.origin}/home`,
         },
@@ -122,15 +135,53 @@ const AuthPage = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Registration successful!",
-        description: "Welcome to our temple community.",
-      });
-      navigate("/home");
+      if (data.user) {
+        setPendingUserId(data.user.id);
+        setIsOtpDialogOpen(true);
+        toast({
+          title: "Verification code sent!",
+          description: "Please check your phone for the OTP code.",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Registration failed",
         description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (otp.length !== 6) {
+        toast({
+          title: "Invalid OTP",
+          description: "Please enter a 6-digit code.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phone.trim(),
+        token: otp,
+        type: 'sms',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Phone verified!",
+        description: "Your account has been created successfully.",
+      });
+      setIsOtpDialogOpen(false);
+      navigate("/home");
+    } catch (error: any) {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Please check your code and try again.",
         variant: "destructive",
       });
     }
@@ -272,6 +323,20 @@ const AuthPage = () => {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="register-phone">Phone Number</Label>
+                <Input
+                  id="register-phone"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Include country code (e.g., +1 for US)
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
                 <Input
                   id="register-password"
@@ -299,6 +364,38 @@ const AuthPage = () => {
             </form>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify Phone Number</DialogTitle>
+              <DialogDescription>
+                Enter the 6-digit code sent to your phone number.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={(value) => setOtp(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button type="submit" className="w-full">
+                Verify Phone
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </Card>
     </div>
   );
