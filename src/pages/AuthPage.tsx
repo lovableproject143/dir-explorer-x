@@ -187,6 +187,31 @@ const AuthPage = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        phone: phone.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/home`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Code resent!",
+        description: "Please check your phone for the new OTP code.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Resend failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -370,7 +395,7 @@ const AuthPage = () => {
             <DialogHeader>
               <DialogTitle>Verify Phone Number</DialogTitle>
               <DialogDescription>
-                Enter the 6-digit code sent to your phone number.
+                Enter the 6-digit code sent to {phone}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleVerifyOtp} className="space-y-4">
@@ -390,9 +415,22 @@ const AuthPage = () => {
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button type="submit" className="w-full">
-                Verify Phone
-              </Button>
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1">
+                  Verify Phone
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleResendOtp}
+                  className="flex-1"
+                >
+                  Resend Code
+                </Button>
+              </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Didn't receive the code? Click resend or check your phone number.
+              </p>
             </form>
           </DialogContent>
         </Dialog>
